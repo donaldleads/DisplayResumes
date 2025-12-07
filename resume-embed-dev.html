@@ -1,0 +1,236 @@
+<div id="resume-app-dev">
+<div id="filters-dev"></div>
+<div id="resume-list-dev"><p>Loading content...</p></div>
+</div>
+<style>
+/* Outer semi-transparent wrapper */
+#resume-app-dev {
+font-family: Arial, sans-serif;
+max-width: 900px;
+margin: 0 auto;
+padding: 25px;
+background: rgba(255, 255, 255, 0.75); /* semi-transparent white */
+border-radius: 12px;
+box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+/* Filter groups */
+.filter-group {
+margin-bottom: 20px;
+}
+.filter-label-row {
+display: flex;
+align-items: center;
+gap: 6px;
+margin-bottom: 4px;
+font-size: 0.95rem;
+}
+.filter-group strong {
+display: inline-block;
+}
+/* Inline reset icon (layout D) */
+.filter-reset-icon {
+cursor: pointer;
+user-select: none;
+font-size: 0.9rem;
+color: #666;
+}
+.filter-reset-icon:hover {
+color: #000;
+}
+.filter-group button {
+margin: 6px 6px 0 0;
+padding: 8px 14px;
+border: 1px solid #666;
+background: #f2f2f2;
+border-radius: 6px;
+cursor: pointer;
+font-size: 0.9rem;
+transition: background 0.2s, transform 0.1s, border-color 0.2s, color 0.2s;
+}
+.filter-group button:hover {
+background: #e6e6e6;
+transform: translateY(-1px);
+}
+/* Selected filter state: royal blue */
+.filter-group button.selected {
+border-color: #4169e1; /* royal blue */
+background: #e3ebff;
+color: #1f3a93;
+}
+/* Candidate cards */
+.candidate {
+background: #ffffff;
+border-radius: 10px;
+padding: 18px;
+margin-bottom: 18px;
+box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.candidate h3 {
+margin: 0 0 10px 0;
+font-size: 1.25em;
+}
+.candidate p {
+margin: 4px 0;
+line-height: 1.4em;
+font-size: 0.93rem;
+}
+.candidate a {
+display: inline-block;
+margin-top: 10px;
+color: #0066cc;
+text-decoration: none;
+font-weight: bold;
+font-size: 0.9rem;
+}
+.candidate a:hover {
+text-decoration: underline;
+}
+</style>
+<script>
+window.addEventListener("DOMContentLoaded", function () {
+const DATA_URL = "https://raw.githubusercontent.com/donaldleads/DisplayResumes/main/resumes.json";
+// Strip newlines and trim
+function clean(str) {
+return String(str || "").replace(/\n/g, "").trim();
+}
+async function loadResumes() {
+const res = await fetch(DATA_URL);
+if (!res.ok) {
+throw new Error("Failed to load resumes.json");
+}
+return await res.json();
+}
+function renderResumes(list) {
+const container = document.getElementById("resume-list-dev");
+if (!list || list.length === 0) {
+container.innerHTML = "<p>No matching resumes.</p>";
+return;
+}
+const html = list.map(r => `
+<div class="candidate">
+<h3>Profile: ${r.name}</h3>
+<p><strong>Specialty:</strong> ${r.jobFunction.join(", ")}</p>
+<p><strong>Supported:</strong> ${r.agenciesSupported.join(", ")}</p>
+<p><strong>Last Modified:</strong> ${r.modified || ""}</p>
+<a target="_blank" href="https://drive.google.com/file/d/${r.gdriveId}/preview">
+View Resume
+</a>
+</div>
+`).join("");
+container.innerHTML = html;
+}
+loadResumes()
+.then(data => {
+// Normalize data
+const resumes = data.map(item => ({
+id: item.id,
+name: clean(item.name),
+rawResId: clean(item.rawResId),
+gdriveId: item.gdriveId,
+gdriveFilePath: item.gdriveFilePath,
+jobFunction: (item.jobFunction || []).map(j => clean(j.Value)),
+agenciesSupported: (item.agenciesSupported || []).map(a => clean(a.Value)),
+modified: item.modified
+}));
+// Build unique filter sets from normalized values
+const specialties = Array.from(new Set(
+resumes.flatMap(r => r.jobFunction)
+)).sort();
+const supported = Array.from(new Set(
+resumes.flatMap(r => r.agenciesSupported)
+)).sort();
+const filtersDiv = document.getElementById("filters-dev");
+filtersDiv.innerHTML = `
+<div class="filter-group" id="specialty-filters-dev">
+<div class="filter-label-row">
+<span class="filter-reset-icon" data-reset="specialty" title="Reset">⟲</span>
+<strong>Specialty:</strong>
+</div>
+${specialties.map(s => `<button type="button" class="filter-btn" data-specialty="${s}">${s}</button>`).join("")}
+</div>
+<div class="filter-group" id="supported-filters-dev">
+<div class="filter-label-row">
+<span class="filter-reset-icon" data-reset="supported" title="Reset">⟲</span>
+<strong>Supported:</strong>
+</div>
+${supported.map(a => `<button type="button" class="filter-btn" data-supported="${a}">${a}</button>`).join("")}
+</div>
+`;
+// Multi-select sets
+const selectedSpecialties = new Set();
+const selectedSupported = new Set();
+function applyFilters() {
+const selectedSpecArr = Array.from(selectedSpecialties);
+const selectedSuppArr = Array.from(selectedSupported);
+const filtered = resumes.filter(r => {
+const specialtyOK =
+selectedSpecArr.length === 0 ||
+r.jobFunction.some(j => selectedSpecArr.includes(j));
+const supportedOK =
+selectedSuppArr.length === 0 ||
+r.agenciesSupported.some(a => selectedSuppArr.includes(a));
+return specialtyOK && supportedOK;
+});
+renderResumes(filtered);
+}
+// Toggle button selection state (for multi-select)
+function toggleSelection(set, value, attr) {
+if (set.has(value)) {
+set.delete(value);
+} else {
+set.add(value);
+}
+// Update visual state
+document.querySelectorAll("[" + attr + "]").forEach(btn => {
+if (set.has(btn.getAttribute(attr))) {
+btn.classList.add("selected");
+} else {
+btn.classList.remove("selected");
+}
+});
+}
+// Clear all selections for a category
+function clearSelection(set, attr) {
+set.clear();
+document.querySelectorAll("[" + attr + "]").forEach(btn => {
+btn.classList.remove("selected");
+});
+}
+// Specialty buttons (multi-select + toggle)
+document.querySelectorAll("[data-specialty]").forEach(btn => {
+btn.addEventListener("click", () => {
+const val = btn.dataset.specialty;
+toggleSelection(selectedSpecialties, val, "data-specialty");
+applyFilters();
+});
+});
+// Supported buttons (multi-select + toggle)
+document.querySelectorAll("[data-supported]").forEach(btn => {
+btn.addEventListener("click", () => {
+const val = btn.dataset.supported;
+toggleSelection(selectedSupported, val, "data-supported");
+applyFilters();
+});
+});
+// Reset icons
+document.querySelectorAll(".filter-reset-icon").forEach(icon => {
+icon.addEventListener("click", () => {
+const target = icon.dataset.reset;
+if (target === "specialty") {
+clearSelection(selectedSpecialties, "data-specialty");
+} else if (target === "supported") {
+clearSelection(selectedSupported, "data-supported");
+}
+applyFilters();
+});
+});
+// Initial render
+applyFilters();
+})
+.catch(err => {
+console.error(err);
+const container = document.getElementById("resume-list-dev");
+container.innerHTML = "<p>Unable to load resumes right now.</p>";
+});
+});
+</script>
