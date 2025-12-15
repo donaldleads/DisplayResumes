@@ -1,60 +1,52 @@
-# Resume Display Embed Code
+# Production Resume Gallery Setup
 
-This repository contains the embed code for the resume display feature on donaldleads.com.
+## Files Overview
 
-## File Structure
+### 1. HTML Embed Code
+**File:** `resume-embed-prod.html`
+**Location on site:** donaldleads.com/#resumes
+**Purpose:** Main production resume gallery with request form
 
-- `resume-embed-dev.html` - Development version (uses `-dev` suffix IDs)
-- `resume-embed-prod.html` - Production version (standard IDs)
-- `resumes.json` - Resume data
+### 2. GitHub JSON File
+**File:** `resumes.json` (already exists in your repo)
+**URL:** https://raw.githubusercontent.com/donaldleads/DisplayResumes/main/resumes.json
+**Purpose:** Contains all production resumes data
 
-## Workflow
+## Key Differences from Dev Version
 
-### Making Changes
-
-1. **Edit `resume-embed-dev.html`** - Make all changes here first
-2. **Test on your site** - Paste into the `#resumesdev` section in Carrd
-3. **Verify it works** - Check functionality, styling, filters, etc.
-
-### Promoting to Production
-
-When your dev version is tested and ready:
-
-1. **Copy `resume-embed-dev.html`** to a text editor
-2. **Find and Replace** the following:
-   - `resume-app-dev` → `resume-app`
-   - `filters-dev` → `filters`
-   - `resume-list-dev` → `resume-list`
-   - `specialty-filters-dev` → `specialty-filters`
-   - `supported-filters-dev` → `supported-filters`
-3. **Save as `resume-embed-prod.html`**
-4. **Commit both files** to GitHub
-5. **Paste prod version** into `#resumes` section in Carrd
-
-## Key Differences Between Dev and Prod
-
-The ONLY differences between dev and prod versions are the element IDs:
-- Dev uses `-dev` suffix to avoid conflicts when both are on the same page
-- Prod uses standard IDs
+| Aspect | Dev Version | Prod Version |
+|--------|-------------|--------------|
+| HTML IDs | All have `-dev` suffix | No suffix (e.g., `resume-app`, `filters`) |
+| Site Location | #resumesdev | #resumes |
+| JSON Source | Same file (resumes.json) | Same file (resumes.json) |
+| Webhook URL | Same (both use production flow) | Same |
 
 ## Important Notes
 
-- Both versions pull from the same `resumes.json` data file
-- Keep both files in sync (content-wise), only IDs should differ
-- Always test in dev before pushing to prod
-- Carrd.co strips indentation, so don't worry about formatting
+⚠️ **Both dev and prod currently use the SAME resumes.json file**
 
-## Version History
+This means:
+- Changes to resumes.json appear on BOTH dev and prod pages
+- You're currently using #resumesdev for testing
+- When ready to go live, you'll use #resumes with this prod code
 
-Track your changes here:
+## Going Live Checklist
 
-### 2025-12-06
-- Initial setup with dev/prod split
-- Fixed querySelectorAll syntax bug
-- Changed header from "Profile #X" to "Profile: Name"
-- Removed redundant Name field
-- Moved reset icon to left of category labels
+1. ✅ Test the dev version thoroughly at #resumesdev
+2. ✅ Verify all resumes display correctly
+3. ✅ Test the request form submission
+4. ✅ Confirm emails are sent correctly
+5. ⬜ When ready: Paste `resume-embed-prod.html` into Carrd embed at #resumes
+6. ⬜ Test production page
+7. ⬜ Update any links pointing to the resume gallery
 
----
+## Future Consideration: Separate Dev/Prod JSON Files
 
-*Maintained by donaldleads*
+If you want completely separate dev and prod environments in the future, you could:
+
+1. Create `resumes-dev.json` in GitHub
+2. Update dev version to point to `resumes-dev.json`
+3. Keep `resumes.json` for production only
+4. Test changes in dev, then promote to prod when ready
+
+For now, using one file for both is simpler and fine for your use case.
