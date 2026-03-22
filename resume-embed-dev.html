@@ -174,9 +174,11 @@
 </style>
 
 <script>
-  window.addEventListener("DOMContentLoaded", function () {
-    const DATA_URL = "https://raw.githubusercontent.com/donaldleads/DisplayResumes/main/resumes.json";
-    const WEBHOOK_URL = "https://default03b6d8e5ad004a41862a8cd358a96b.3a.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/c952e8c0353f4aabbdb846d7e9f73aeb/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=r20iiRrm8kYRgH9gRbWO8CBQ7KoFtxc6lqn2itUT-Bg";
+  (function() {
+    // Run immediately if DOM ready, otherwise wait
+    function init() {
+      const DATA_URL = "https://raw.githubusercontent.com/donaldleads/DisplayResumes/main/resumes.json";
+      const WEBHOOK_URL = "https://default03b6d8e5ad004a41862a8cd358a96b.3a.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/c952e8c0353f4aabbdb846d7e9f73aeb/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=r20iiRrm8kYRgH9gRbWO8CBQ7KoFtxc6lqn2itUT-Bg";
 
     // Strip newlines and trim
     function clean(str) {
@@ -431,5 +433,13 @@
         const container = document.getElementById("resume-list-dev");
         container.innerHTML = "<p>Unable to load resumes right now.</p>";
       });
-  });
+    }
+
+    // Execute immediately - works whether loaded at page load or injected dynamically
+    if (document.getElementById("resume-app-dev")) {
+      init();
+    } else {
+      document.addEventListener("DOMContentLoaded", init);
+    }
+  })();
 </script>
